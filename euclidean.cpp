@@ -106,7 +106,24 @@ void flat(Cell *p_list, int *rhythm)
 	}
 }
 
-void euclidean(int n_beat, int *rhythm)
+void show_rhythm(int *rhythm);
+
+void shift(int *array, int n_shift)
+{
+	int buf[N_LENGTH];
+	int cnt = 0;
+	for (int i = n_shift; i < N_LENGTH; ++i) {
+		buf[cnt++] = array[i];
+	}
+	for (int i = 0; i < n_shift; ++i) {
+		if (cnt >= N_LENGTH) break;
+		buf[cnt++] = array[i];
+	}
+
+	memcpy(array, buf, sizeof(int)*N_LENGTH);
+}
+
+void euclidean(int n_beat, int n_shift, int *rhythm)
 {
 	Cell *sequences = NULL;
 	Cell *remainders = NULL;
@@ -118,7 +135,7 @@ void euclidean(int n_beat, int *rhythm)
 /*
 			show(sequences);
 			show(remainders);
-*/
+// */
 			distribute(sequences, &remainders);
 			if (length(remainders) <= 1) break;
 		}
@@ -127,7 +144,7 @@ void euclidean(int n_beat, int *rhythm)
 /*
 	show(sequences);
 	show(remainders);
-*/
+// */
 
 	Cell *result = NULL;
 	concatenate(&result, sequences);
@@ -136,12 +153,16 @@ void euclidean(int n_beat, int *rhythm)
 //	show(result);
 
 	flat(result, rhythm);
+//	show_rhythm(rhythm);
+
+	shift(rhythm, n_shift);
 }
 
 // --------------------------
 
 /*
 #include <stdio.h>
+#include <stdlib.h>
 
 void print(const Cell *p)
 {
@@ -173,12 +194,20 @@ void show_rhythm(int *rhythm)
 int main(int argc, char **argv)
 {
 	int rhythm[N_LENGTH];
-	int n_beat = argc-1;
+	int n_beat = 0;
+	int n_shift = 0;
 
-	euclidean(n_beat, rhythm);
+	if (argc >= 2) {
+		n_beat = atoi(argv[1]);
+	}
+	if (argc >= 3) {
+		n_shift = atoi(argv[2]);
+	}
+
+	euclidean(n_beat, n_shift, rhythm);
 	show_rhythm(rhythm);
 
 	return 0;
 }
 
-*/
+// */
