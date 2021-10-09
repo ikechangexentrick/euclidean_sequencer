@@ -68,6 +68,8 @@ SevenSegmentDisplay SLED(DATA595_PIN, CLOCK595_PIN, LATCH595_PIN);
 volatile bool shift_pressed;
 volatile int n_shift;
 
+volatile bool dp_status;
+
 class Button_next : public Button
 {
 public:
@@ -267,6 +269,8 @@ void setup() {
 	n_shift = 0;
 	shift_pressed = false;
 
+	dp_status = false;
+
 	SLED.on(n_beat);
 }
 
@@ -286,7 +290,9 @@ ICACHE_RAM_ATTR void onClock()
 			euclidean(n_beat, n_shift, (int *)rhythm);
 			cnt_beat = 0;
 
-			SLED.on(n_beat, true);
+			dp_status = true;
+
+			SLED.on(n_beat, dp_status);
 
 			// register to history if changed
 			if (n_beat != history[idx_history]) {
@@ -308,7 +314,8 @@ ICACHE_RAM_ATTR void onClock()
 	} else {
 		// falling edge
 		digitalWrite(LED_BEAT, LOW);
-		SLED.on(n_beat);
+		dp_status = false;
+		SLED.on(n_beat, dp_status);
 	}
 }
 
@@ -324,6 +331,6 @@ void loop() {
 	if (shift_pressed) {
 		SLED.on(n_shift);
 	} else {
-		SLED.on(n_beat);
+		SLED.on(n_beat, dp_status);
 	}
 }
