@@ -1,6 +1,6 @@
 #include <string.h>
 
-#define N_LENGTH (16)
+#define MAX_LENGTH (64)
 
 enum Node {
 	Off
@@ -13,13 +13,13 @@ typedef struct _Cell {
 	enum Node data;
 } Cell;
 
-static Cell Nodes[N_LENGTH];
+static Cell Nodes[MAX_LENGTH];
 
-void init(Cell **p_seq, Cell **p_rem, int n_beat)
+void init(Cell **p_seq, Cell **p_rem, int n_beat, int len)
 {
 	*p_seq = NULL;
 	*p_rem = NULL;
-	for (int i = 0; i < N_LENGTH; ++i) {
+	for (int i = 0; i < len; ++i) {
 		memset(&Nodes[i], 0, sizeof(Cell));
 		if (n_beat > 0) {
 			Nodes[i].data = On;
@@ -30,7 +30,7 @@ void init(Cell **p_seq, Cell **p_rem, int n_beat)
 	}
 
 	
-	for (int i = 0; i < N_LENGTH; ++i) {
+	for (int i = 0; i < len; ++i) {
 		if (Nodes[i].data == On) {
 			Nodes[i].sibling = *p_seq;
 			*p_seq = &Nodes[i];
@@ -108,27 +108,35 @@ void flat(Cell *p_list, int *rhythm)
 
 void show_rhythm(int *rhythm);
 
-void shift(int *array, int n_shift)
+void shift(int *array, int len, int n_shift)
 {
-	int buf[N_LENGTH];
+	int buf[MAX_LENGTH];
 	int cnt = 0;
-	for (int i = n_shift; i < N_LENGTH; ++i) {
+/*
+	for (int i = n_shift; i < len; ++i) {
 		buf[cnt++] = array[i];
 	}
 	for (int i = 0; i < n_shift; ++i) {
-		if (cnt >= N_LENGTH) break;
+		if (cnt >= len) break;
+		buf[cnt++] = array[i];
+	}
+*/
+	for (int i = len-n_shift; i < len; ++i) {
+		buf[cnt++] = array[i];
+	}
+	for (int i = 0; i < len-n_shift; ++i) {
 		buf[cnt++] = array[i];
 	}
 
-	memcpy(array, buf, sizeof(int)*N_LENGTH);
+	memcpy(array, buf, sizeof(int)*len);
 }
 
-void euclidean(int n_beat, int n_shift, int *rhythm)
+void euclidean(int n_beat, int n_shift, int *rhythm, int len)
 {
 	Cell *sequences = NULL;
 	Cell *remainders = NULL;
 
-	init(&sequences, &remainders, n_beat);
+	init(&sequences, &remainders, n_beat, len);
 
 	if (remainders && sequences) {
 		while (1) {
@@ -155,7 +163,7 @@ void euclidean(int n_beat, int n_shift, int *rhythm)
 	flat(result, rhythm);
 //	show_rhythm(rhythm);
 
-	shift(rhythm, n_shift);
+	shift(rhythm, len, n_shift);
 }
 
 // --------------------------

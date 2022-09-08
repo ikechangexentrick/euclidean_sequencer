@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name digikey-footprints)(type KiCad)(uri /Users/nikeda/Documents/kicad/digikey-kicad-library/digikey-footprints.pretty)(options "")(descr ""))
+  (lib (name ClockGenerator)(type KiCad)(uri /Users/nikeda/Documents/kicad/ClockGenerator/ClockGenerator.pretty)(options "")(descr ""))
+)
