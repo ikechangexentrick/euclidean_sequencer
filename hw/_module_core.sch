@@ -421,17 +421,14 @@ Connection ~ 7450 3450
 Wire Wire Line
 	7450 3050 7000 3050
 NoConn ~ 5450 4650
-NoConn ~ 6650 3750
 Text Label 6650 4200 0    50   ~ 0
 cv_len
 Text Label 6650 4050 0    50   ~ 0
 cv_num
 Text Label 6650 3900 0    50   ~ 0
 cv_sft
-Text Label 5450 4050 2    50   ~ 0
+Text Label 6650 3750 0    50   ~ 0
 cv_select_in
-Text Notes 7200 3750 2    50   ~ 0
-random seed
 Wire Wire Line
 	7450 3450 6650 3450
 Wire Wire Line
@@ -1546,4 +1543,5 @@ Wire Wire Line
 Wire Wire Line
 	1750 1100 1750 1500
 Connection ~ 1750 1100
+NoConn ~ 5450 4050
 $EndSCHEMATC

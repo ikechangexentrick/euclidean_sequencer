@@ -18,11 +18,11 @@ void serial_log(const char *fmt, Args... args)
 
 //  -----------------------------------------------
 
-static const int PIN_RANDOM_SEED = 21; // A3
+//static const int PIN_RANDOM_SEED = 21; // A3
 static const int PIN_CV_SFT = 20; // A2
 static const int PIN_CV_NUM = 19; // A1
 static const int PIN_CV_LEN = 18; // A0
-static const int PIN_CV_SELECT = 4; // A6
+static const int PIN_CV_SELECT = 21; // A3
 
 static const int PIN_ROTARY_SW1 = 10; // pin change interrupt
 static const int PIN_ROTARY_SW2 = 6;
@@ -31,7 +31,7 @@ static const int PIN_CLOCK = 7; // attachInterrupt
 
 static const int LED_BEAT = 5;
 
-bool only_for_develop = true;
+//bool only_for_develop = true;
 
 //  -----------------------------------------------
 
@@ -68,15 +68,16 @@ public:
 
 	// parameters to be used next/manipulated by UI
 	size_t get_next_idx() const {
-		return nidx
+		return (nidx
 			+ (size_t)((float)MAX_PARAM_NUM*(float)cv.select/1024.0)
+			) % MAX_PARAM_NUM
 		;
 	}
 
 	// CV controls length from 0 to 2xlen, with len for 0V.
 	size_t get_next_len() const {
 		size_t v = (float)nexts[get_next_idx()].len
-			*(1.0+(float)((int)cv.len-512)/512.0)
+			*(1.0+(float)((int)cv.len-480)/480.0) // 0 - 480 - 1009
 		;
 
 		if (v >= SEQ_MAX_LEN) return SEQ_MAX_LEN;
@@ -137,7 +138,7 @@ void App::onRotarySW(RotarySwitch::RSW_DIR dir) {
 
 	if (mode == Mode::Length) {
 		auto &target = next.len;
-		if (dir == RotarySwitch::CW) {
+		if (dir == RotarySwitch::CCW) {
 			if (target < SEQ_MAX_LEN-1) target += 1;
 		} else {
 			if (target > 0) target -= 1;
@@ -148,20 +149,20 @@ void App::onRotarySW(RotarySwitch::RSW_DIR dir) {
 
 	} else if (mode == Mode::Number) {
 		auto &target = next.num;
-		if (dir == RotarySwitch::CW) {
+		if (dir == RotarySwitch::CCW) {
 			if (target < next.len) target += 1;
 		} else {
 			if (target > 0) target -= 1;
 		}
 	} else if (mode == Mode::Shift) {
 		auto &target = next.sft;
-		if (dir == RotarySwitch::CW) {
+		if (dir == RotarySwitch::CCW) {
 			if (target < next.len) target += 1;
 		} else {
 			if (target > 0) target -= 1;
 		}
 	} else {
-		if (dir == RotarySwitch::CW) {
+		if (dir == RotarySwitch::CCW) {
 			if (nidx < MAX_PARAM_NUM-1) nidx += 1;
 		} else {
 			if (nidx > 0) nidx -= 1;
@@ -177,6 +178,7 @@ void App::onButton(int state) {
 }
 
 void App::set_cv(int len, int num, int sft, int select) {
+	//serial_log("%d %d %d %d", len, num, sft, select);
 	cv.len = len;
 	cv.num = num;
 	cv.sft = sft;
@@ -201,9 +203,18 @@ App::Param App::get_next_param() const {
 	auto idx = get_next_idx();
 	ret.len = get_next_len();
 
+/*
+	serial_log("%d+%d %d+%d %d+%d %d+%d(%d)"
+			, (int)nexts[idx].len, (int)(1.0+(float)((int)cv.len-480)/480.0)
+			, (int)nexts[idx].num, (int)((float)((int)cv.num-480)/480.0*ret.len)
+			, (int)nexts[idx].sft, (int)((float)((int)cv.sft-480)/480.0*ret.len)
+			, nidx, (int)((float)MAX_PARAM_NUM*(float)cv.select/1009.0), cv.select
+	);
+// */
+
 	{
 		size_t v = (int)nexts[idx].num
-			+ (int)((float)((int)cv.num-512)/512.0*ret.len)
+			+ (int)((float)((int)cv.num-480)/480.0*ret.len)
 		;
 
 		if (v >= ret.len) ret.num = ret.len;
@@ -213,7 +224,7 @@ App::Param App::get_next_param() const {
 
 	{
 		size_t v = (int)nexts[idx].sft
-			+ (int)((float)((int)cv.sft-512)/512.0*ret.len)
+			+ (int)((float)((int)cv.sft-480)/480.0*ret.len)
 		;
 
 		if (v >= ret.len) ret.sft = ret.len;
@@ -288,7 +299,7 @@ void onClock()
 	display.show_status("len:%2d num:%2d sft:%2d", n_len, n_beat, n_shift);
 */
 
-	if (only_for_develop/*clock == HIGH*/) {
+	if (/*only_for_develop*/clock == HIGH) {
 		// rising edge
 
 		const auto cur_len = app->get_len();
@@ -330,7 +341,7 @@ void setup() {
 
 	pinMode(LED_BEAT, OUTPUT);
 
-	randomSeed(analogRead(PIN_RANDOM_SEED));
+	//randomSeed(analogRead(PIN_RANDOM_SEED));
 
 	pinMode(PIN_CV_LEN, INPUT);
 	pinMode(PIN_CV_NUM, INPUT);
@@ -412,7 +423,7 @@ void show_pattern()
 	for (size_t i = 0; i < App::MAX_PARAM_NUM; ++i) {
 		char buf[16];
 		auto p = app->get_params(c);
-		snprintf(buf, 16, "%2d: %2d/%2d/%2d", ++c, p->len, p->num, p->sft);
+		snprintf(buf, 16, "%c%d: %2d/%2d/%2d", i == app->get_next_idx() ? '>' : ' ', ++c, p->len, p->num, p->sft);
 		display.print_column(Display_OLED::TEXT_HEIGHT*(i+3), buf);
 	}
 }
@@ -448,15 +459,17 @@ void loop() {
 				show_mode(app->get_mode());
 				show_graph(sequence, app->get_len(), seq_idx);
 				//display.draw_hline(Display_OLED::TEXT_HEIGHT*3+Display_OLED::TEXT_HEIGHT/2);
-				show_pattern()
+				show_pattern();
 			}
 		);
 		t_prev_disp = t_cur;
 	}
 
+/*
 	if (t_cur-t_prev > 125) {
 		only_for_develop = !only_for_develop;
 		onClock();
 		t_prev = t_cur;
 	}
+// */
 }
