@@ -44,7 +44,7 @@ public:
 	static constexpr const size_t SEQ_MAX_LEN = 32;
 
 	struct Param {
-		size_t len = 8;
+		size_t len = 16;
 		size_t num = 8;
 		size_t sft = 0;
 	};
